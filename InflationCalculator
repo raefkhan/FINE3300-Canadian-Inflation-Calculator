@@ -1,0 +1,38 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+class InflationCalculator:
+
+    def __init__(self):
+        self.data = pd.read_csv('STATIC_INFLATIONCALC.csv', skiprows=8)
+
+        print(self.data.head())
+        print(self.data.columns)
+        print(self.data.dtypes)
+
+        self.data['date'] = pd.to_datetime(self.data['date'])
+        self.data = self.data.sort_values('date')
+        self.data['Annual Change'] = (
+            self.data['STATIC_INFLATIONCALC'].pct_change(periods=12) * 100)
+
+    def plot(self):
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.plot(self.data['date'], self.data['STATIC_INFLATIONCALC'], label='CPI')
+
+        ax.axhline( y=100, color='black', linestyle=':')
+
+        ax = ax.twinx()
+        ax.plot( self.data['date'], 
+                 self.data['Annual Change'], color='red', label='Annual Percentage Change' )
+
+        ax.set_xlabel('Year')
+        ax.set_ylabel('Consumer Price Index')
+        ax.set_title('Canadian Consumer Price Index Over Time')
+        ax.legend()
+
+        # plt.savefig('CPI_Inflation_Graph.png', dpi=300)
+        plt.show()
+
+InflationCalculator()
+InflationCalculator().plot()
