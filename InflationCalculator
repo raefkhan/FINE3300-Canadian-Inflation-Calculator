@@ -17,7 +17,7 @@ class InflationCalculator:
         self.data['Annual Change'] = (
             self.data['STATIC_INFLATIONCALC'].pct_change(periods=12) * 100)
 
-    def plot(self):
+    def plot(self):                              # Creates a graph of the Canadian Consumer Price Index (CPI) over time, with a secondary axis for the annual rate of change.
         fig, ax1 = plt.subplots(figsize=(10, 5), layout='constrained')
 
         color_cpi = 'tab:blue'
@@ -41,7 +41,7 @@ class InflationCalculator:
         plt.savefig('CPI_Inflation_Graph.png', dpi=300)
         plt.show()
 
-    def get_amount(self):
+    def get_amount(self):                            # Prompts user for a valid non-negative price amount.
         while True:
             try:
                 amount = float(input("Enter the price ($) for the chosen year: "))
@@ -53,7 +53,7 @@ class InflationCalculator:
                 continue
             return amount
 
-    def get_date(self, label):
+    def get_date(self, label):                        # Prompts user for a valid year and month within dataset limits.
         min_date = self.data['date'].min()
         max_date = self.data['date'].max()
         while True:
@@ -81,11 +81,11 @@ class InflationCalculator:
                 continue
             return date
 
-    def get_cpi(self, date):
+    def get_cpi(self, date):                             # Retrieves the CPI value corresponding to the specified date
         cpi_row = self.data[self.data['date'] == date]
         return cpi_row['STATIC_INFLATIONCALC'].iloc[0]
 
-    def run(self):
+    def run(self):                                       # Calculates inflation metrics and prints the summary results
         amount = self.get_amount()
         d1 = self.get_date("Currently Chosen")
         d2 = self.get_date("Desired Prediction")
@@ -101,7 +101,7 @@ class InflationCalculator:
         print(f"CPI for {d1}: {cpi1}")
         print(f"CPI for {d2}: {cpi2}")
 
-if __name__ == '__main__':
+if __name__ == '__main__':                   
     calc = InflationCalculator()
     calc.plot()
     calc.run()
