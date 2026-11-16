@@ -5,11 +5,12 @@ import numpy as np
 class InflationCalculator:
 
     def __init__(self):
-        self.data = pd.read_csv('STATIC_INFLATIONCALC.csv', skiprows=8)
+        self.data = pd.read_csv('STATIC_INFLATIONCALC.csv', skiprows=8) # Skipping the rows that do not consist of the data we need.
 
-        print(self.data.head())
-        print(self.data.columns)
-        print(self.data.dtypes)
+        # Below we were observing the data as asked in the assignment, but we commented it out to keep the code clean.
+        # print(self.data.head())
+        # print(self.data.columns)
+        # print(self.data.dtypes)
 
         self.data['date'] = pd.to_datetime(self.data['date'])
         self.data = self.data.sort_values('date')
@@ -17,22 +18,90 @@ class InflationCalculator:
             self.data['STATIC_INFLATIONCALC'].pct_change(periods=12) * 100)
 
     def plot(self):
-        fig, ax = plt.subplots(figsize=(10, 5))
-        ax.plot(self.data['date'], self.data['STATIC_INFLATIONCALC'], label='CPI')
+        fig, ax1 = plt.subplots(figsize=(10, 5), layout='constrained')
 
-        ax.axhline( y=100, color='black', linestyle=':')
+        color_cpi = 'tab:blue'
+        ax1.set_xlabel('Date', fontweight='bold')
+        ax1.set_ylabel('Consumer Price Index (CPI)', color=color_cpi, fontweight='bold')
+        line1 = ax1.plot(self.data['date'], self.data['STATIC_INFLATIONCALC'], color=color_cpi, label='CPI Level')
+        ax1.tick_params(axis='y', labelcolor=color_cpi)
 
-        ax = ax.twinx()
-        ax.plot( self.data['date'], 
-                 self.data['Annual Change'], color='red', label='Annual Percentage Change' )
+        ax2 = ax1.twinx()
+        color_pct = 'tab:red'
+        ax2.set_ylabel('Annual Rate of Change (%)', color=color_pct, fontweight='bold')
+        line2 = ax2.plot(self.data['date'], self.data['Annual Change'], color=color_pct, linestyle='-', label='Annual % Change')
 
-        ax.set_xlabel('Year')
-        ax.set_ylabel('Consumer Price Index')
-        ax.set_title('Canadian Consumer Price Index Over Time')
-        ax.legend()
+        line3 = ax2.axhline(0, color='black', linestyle=':', label='Base Level (0%)')
 
-        # plt.savefig('CPI_Inflation_Graph.png', dpi=300)
+        ax1.set_title('Canadian Consumer Price Index Over Time', fontweight='bold')
+        lines = line1 + line2 + [line3]
+        labels = [l.get_label() for l in lines]
+        ax1.legend(lines, labels, loc='upper left')
+
+        plt.savefig('CPI_Inflation_Graph.png', dpi=300)
         plt.show()
 
-InflationCalculator()
-InflationCalculator().plot()
+    def get_amount(self):
+        while True:
+            try:
+                amount = float(input("Enter the price ($) for the chosen year: "))
+            except ValueError:
+                print("Invalid Value. Please enter a valid number.")
+                continue
+            if amount <= 0:
+                print("Amount cannot be zero or a negative number!")
+                continue
+            return amount
+
+    def get_date(self, label):
+        min_date = self.data['date'].min()
+        max_date = self.data['date'].max()
+        while True:
+            try:
+                year = int(input(f"Enter the year of the {label} period (1914-2026): "))
+            except ValueError:
+                print("Invalid Value. Please enter a valid year.")
+                continue
+            if year < 1914 or year > 2026:
+                print("The Year must be between 1914 and 2026.")
+                continue
+            break
+        while True:
+            try:
+                month = int(input(f"Enter the month of the {label} period (1-12): "))
+            except ValueError:
+                print("Invalid Value. Please enter a valid month.")
+                continue
+            if month < 1 or month > 12:
+                print("The Month must be between 1 and 12.")
+                continue
+            date = pd.to_datetime(f"{year}-{month}-01")
+            if date < min_date or date > max_date:
+                print(f"Data only runs from {min_date.month}/{min_date.year} to {max_date.month}/{max_date.year}.")
+                continue
+            return date
+
+    def get_cpi(self, date):
+        cpi_row = self.data[self.data['date'] == date]
+        return cpi_row['STATIC_INFLATIONCALC'].iloc[0]
+
+    def run(self):
+        amount = self.get_amount()
+        d1 = self.get_date("Currently Chosen")
+        d2 = self.get_date("Desired Prediction")
+        cpi1, cpi2 = self.get_cpi(d1), self.get_cpi(d2)
+        months = (d2.year - d1.year) * 12 + (d2.month - d1.month)
+        years = abs(months) / 12
+        rate = ((cpi2 / cpi1) ** (1 / years) - 1) * 100 if years else 0
+
+        print(f"\n${amount} in {d1} would cost ${amount * cpi2 / cpi1} in {d2}")
+        print(f"Percent change: {(cpi2 / cpi1 - 1) * 100}%")
+        print(f"Number of years: {years}")
+        print(f"Average annual rate of inflation: {rate}%")
+        print(f"CPI for {d1}: {cpi1}")
+        print(f"CPI for {d2}: {cpi2}")
+
+if __name__ == '__main__':
+    calc = InflationCalculator()
+    calc.plot()
+    calc.run()
