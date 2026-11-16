@@ -92,7 +92,7 @@ class InflationCalculator:
         cpi1, cpi2 = self.get_cpi(d1), self.get_cpi(d2)
         months = (d2.year - d1.year) * 12 + (d2.month - d1.month)
         years = abs(months) / 12
-        rate = ((cpi2 / cpi1) ** (1 / years) - 1) * 100 if years else 0
+        rate = (np.power(cpi2 / cpi1, 1.0 / years) - 1.0) * 100.0 if years > 0 else 0.0
 
         print(f"\n${amount} in {d1} would cost ${amount * cpi2 / cpi1} in {d2}")
         print(f"Percent change: {(cpi2 / cpi1 - 1) * 100}%")
